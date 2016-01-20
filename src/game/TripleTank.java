@@ -1,0 +1,44 @@
+package game;
+
+import ui.ShapeManager;
+
+public class TripleTank extends Tank {
+	
+	static final double SPEED = 1.0;
+	static final int HIT_POINTS = 100;
+	static final double VISIBLE_DIST = 170.0;
+	static final double FIREABLE_DIST = 150.0;
+	static final double MAX_TURN_ANGLE = Math.PI/180.0;
+	static final int MAX_TIME_TO_FIRE = 35;
+	static final int BULLET_OFFSET_X = HALF_WIDTH - TinyBullet.HALF_DIAMETER;
+	static final int BULLET_OFFSET_Y = HALF_HEIGHT - TinyBullet.HALF_DIAMETER;
+	public static final int CONSTRUCTION_TIME = 1600;
+	
+	static final int ABSOLUTE_OFFSET = 12;
+	int multiplier = 1;
+	boolean left = false;
+
+	public TripleTank(Game game, TeamManager team, double x, double y) {
+		super(game, team, x, y, HIT_POINTS, SPEED, VISIBLE_DIST, FIREABLE_DIST, MAX_TIME_TO_FIRE, MAX_TURN_ANGLE, 0, 0, ShapeManager.TRIPLE_TANK);
+		setFlagOn(Flag.CAN_FIRE);
+	}
+	
+	@Override
+	public void fire() {
+		int multiplier = getMultiplier();
+		bulletOffsetX = ABSOLUTE_OFFSET + (int)(Math.sin(angle)*ABSOLUTE_OFFSET*multiplier);
+		bulletOffsetY = ABSOLUTE_OFFSET + (int)(Math.sin(angle + THREE_HALVES_PI)*ABSOLUTE_OFFSET*multiplier);
+		
+		game.newGameObjects.add(new TinyBullet(game, team, this, x + bulletOffsetX, y + bulletOffsetY, angle));
+	}
+	
+	public int getMultiplier() {
+		if(multiplier != 0) multiplier = 0;
+		else {
+			if(left) multiplier = 1;
+			else multiplier = -1;
+			left = !left;
+		}
+		return multiplier;
+	}
+}
