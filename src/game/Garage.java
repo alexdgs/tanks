@@ -4,19 +4,18 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
-
 import javax.swing.ImageIcon;
 
 public class Garage extends ConstructorBuilding implements Drawable {
 	
 	static final int WIDTH = 60;
 	static final int HEIGHT = 60;
-	static final int HIT_POINTS = 250;
+	static final int HIT_POINTS = 500;
 	static final double VISIBLE_DIST = 100.0;
 	static final int TURRET_DESPL = (WIDTH - Turret.WIDTH)/2;
 	static final Image IMG_GARAGE = (new ImageIcon("src/img/garage.png")).getImage().getScaledInstance(WIDTH, HEIGHT, Image.SCALE_FAST);
 	
-	static final int TYPE_TO_ORDER = Type.RANDOM;
+	static final int[] TYPES_TO_ORDER = {Type.RANDOM};
 	@SuppressWarnings("rawtypes")
 	static final Class[] classes = {
 		ClassicTank.class,
@@ -34,7 +33,9 @@ public class Garage extends ConstructorBuilding implements Drawable {
 		TripleTank.class,
 		LightningTank.class,
 		LaserTank.class,
-		BombTank.class
+		BombTank.class,
+		MineTank.class,
+		SecretTank.class
 	};
 	
 	static Constructor<Tank>[] constructors;
@@ -52,7 +53,7 @@ public class Garage extends ConstructorBuilding implements Drawable {
 		prepareConstructors();
 		//setFlagOn(Flag.CAN_FIRE);
 		
-		order(TYPE_TO_ORDER);
+		order(TYPES_TO_ORDER[getRandomInteger(TYPES_TO_ORDER.length)]);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -87,7 +88,8 @@ public class Garage extends ConstructorBuilding implements Drawable {
 		if(timeFinishProcess > 0) {
 			if(timeActualProcess == timeFinishProcess) {
 				build();
-				order(TYPE_TO_ORDER);
+				//Random rnd = new Random(TYPES_TO_ORDER.length);
+				order(TYPES_TO_ORDER[getRandomInteger(TYPES_TO_ORDER.length)]);
 			} else progressBar.update(++timeActualProcess);
 		}
 		
@@ -113,8 +115,15 @@ public class Garage extends ConstructorBuilding implements Drawable {
 		progressBar.setMaxHitPoints(timeFinishProcess, timeActualProcess = 0);
 	}
 	
-	public void underAttack() {
+	@Override
+	public void underAttack(double x, double y) {
 		team.defend(x, y);
+	}
+	
+	@Override
+	public void destroy() {
+		super.destroy();
+		team.remainingGarages--;
 	}
 	
 	@Override
@@ -165,5 +174,7 @@ public class Garage extends ConstructorBuilding implements Drawable {
 		static final int LIGHTNING = 13;
 		static final int LASER = 14;
 		static final int BOMB = 15;
+		static final int MINE = 16;
+		static final int SECRET = 17;
 	}
 }

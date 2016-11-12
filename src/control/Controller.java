@@ -46,6 +46,8 @@ public class Controller implements KeyListener, MouseListener, MouseMotionListen
 		else if(e.getKeyCode() == KeyEvent.VK_F) window.changeFullScreenMode();
 		else if(e.getKeyCode() == KeyEvent.VK_A) ui.addPlayerTeamTank();
 		else if(e.getKeyCode() == KeyEvent.VK_E) ui.togglePlayerAsTarget();
+		else if(e.getKeyCode() == KeyEvent.VK_C) ui.scheduleChangePlayerTeam();
+		else if(e.getKeyCode() == KeyEvent.VK_W) ui.toggleEnemyAwareFlag();
 		else if(e.getKeyCode() == KeyEvent.VK_ESCAPE) ui.endGame();
 	}
 

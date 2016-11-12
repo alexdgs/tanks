@@ -15,12 +15,24 @@ public class TeamManager {
 	static final int BUILDING_DIST = 65;
 	static final int TIME_NOTIFY_DEFEND = 400;
 	
+	static final int STRATEGY_BASE = 1;
+	static final int STRATEGY_OUT = 2;
+	
+	static final int MAX_TANKS_GO_BASE = 2;
+	static final int MIN_TANKS_GO_OUT = 5;
+	static final double MAX_DIST_BASE_ON_DEFENSE = 90.0;
+	
 	public Color color;
 	public String string;
 	int id;
 	int xBase;
 	int yBase;
 	int flags;
+	int strategy;
+	
+	int xHealer;
+	int yHealer;
+	boolean healerAvailable;
 	
 	public int score;
 	public int looses;
@@ -51,11 +63,13 @@ public class TeamManager {
 			setFlagOn(Flag.AI_TEAM);
 			initAI();
 		} else initPlayer();
+		
+		strategy = STRATEGY_BASE;
 		setFlagOn(Flag.ACTIVE);
 	}
 	
 	public void initPlayer() {
-		units.add(new DoubleTank(game, this, xBase, yBase));
+		//units.add(new ShieldedTank(game, this, xBase, yBase));
 		//units.add(new SwarmTank(game, this, xBase + 30, yBase));
 		//units.add(new SwarmTank(game, this, xBase, yBase + 30));
 		//units.add(new SwarmTank(game, this, xBase + 30, yBase + 30));
@@ -93,12 +107,23 @@ public class TeamManager {
 		units.add(new Garage(game, this, xBase + g2x, yBase + g2y));
 		units.add(new Garage(game, this, xBase + g3x, yBase + g3y));
 		
-		units.add(new GuardTower(game, this, xBase + g2x*2, yBase + g2y*2));
-		units.add(new GuardTower(game, this, xBase + g3x*2, yBase + g3y*2));
+		units.add(new GuardTower(game, this, xBase + g2x*2 + BUILDING_DIST/2 - GuardTower.WIDTH/2, yBase + g2y*2 + BUILDING_DIST/2 - GuardTower.HEIGHT/2));
+		units.add(new GuardTower(game, this, xBase + g3x*2 + BUILDING_DIST/2 - GuardTower.WIDTH/2, yBase + g3y*2 + BUILDING_DIST/2 - GuardTower.HEIGHT/2));
 		
-		units.add(new Pillbox(game, this, xBase + g2x*2.5, yBase + g2y*2.5));
-		units.add(new Pillbox(game, this, xBase + g3x*2.5, yBase + g3y*2.5));
+		units.add(new Pillbox(game, this, xBase + g2x*2.5 + BUILDING_DIST/2 - Pillbox.WIDTH/2, yBase + g2y*2.5 + BUILDING_DIST/2 - Pillbox.HEIGHT/2));
+		units.add(new Pillbox(game, this, xBase + g3x*2.5 + BUILDING_DIST/2 - Pillbox.WIDTH/2, yBase + g3y*2.5 + BUILDING_DIST/2 - Pillbox.HEIGHT/2));
+		
+		units.add(new DoubleGun(game, this, xBase + g2x + BUILDING_DIST/2 - DoubleGun.WIDTH/2, yBase + g3y + BUILDING_DIST/2 - DoubleGun.HEIGHT/2));
+		units.add(new DoubleGun(game, this, xBase + g3x + BUILDING_DIST/2 - DoubleGun.WIDTH/2, yBase + g2y + BUILDING_DIST/2 - DoubleGun.HEIGHT/2));
+		
+		xHealer = xBase - g3x/2 + BUILDING_DIST/2 - Healer.WIDTH/2;
+		yHealer = yBase - g2y/2 + BUILDING_DIST/2 - Healer.HEIGHT/2;
+		units.add(new Healer(game, this, xHealer, yHealer));
+		xHealer -= Healer.WIDTH/2;
+		yHealer -= Healer.HEIGHT/2;
+		
 		remainingGarages = 3;
+		healerAvailable = true;
 		setFlagOn(Flag.HAS_REAMINING_GARAGES);
 	}
 	
@@ -125,16 +150,25 @@ public class TeamManager {
 		
 		ArrayList<Unit> remainingUnits = new ArrayList<Unit>();
 		boolean hasRemainingGarages = false;
+		int numTanks = 0;
 		for(Unit u : units) {
 			u.step();
 			if(u.isFlagOn(Unit.Flag.ALIVE)) {
 				remainingUnits.add(u);
+				if(u instanceof Tank && u.isFlagOn(GameObject.Flag.AI_CONTROLLED)) {
+					numTanks++;
+				}
 				if(u instanceof Garage) hasRemainingGarages = true;
 			}
 		}
 		
 		units = remainingUnits;
 		if(!hasRemainingGarages) setFlagOff(Flag.HAS_REAMINING_GARAGES);
+		if(strategy == STRATEGY_BASE && numTanks >= MIN_TANKS_GO_OUT){
+			strategy = STRATEGY_OUT;
+		} else if(strategy == STRATEGY_OUT && numTanks <= MAX_TANKS_GO_BASE){
+			strategy = STRATEGY_BASE;
+		}
 	}
 	
 	public Point getBasePoint() {
@@ -185,7 +219,7 @@ public class TeamManager {
 			for(Unit u : units) {
 				if(u instanceof Tank) {
 					Tank t = (Tank)u;
-					t.moveToPoint(new Point((int)x, (int)y), false);
+					t.defendPoint(x, y);
 				}
 			}
 			timeNotifyDefend = TIME_NOTIFY_DEFEND;

@@ -21,15 +21,22 @@ public abstract class MoveableUnit extends Unit {
 		updateCenter();
 	}
 	
+	public void underAttack(double x, double y) {
+		if(!isFlagOn(Flag.FIRING) && !isFlagOn(Flag.MOVING) && targetPoint == null) {
+			moveToPoint(new Point((int)x, (int)y), false);
+		}
+	}
+	
 	public void moveToPoint(Point p, boolean override) {
-		setFlagOn(Flag.MOVING);
-		if(override && (isFlagOn(Flag.MOVING) || isFlagOn(Flag.FIRING))) {
+		if(override) {
 			target = null;
 			setFlagOn(Flag.OVERRIDE_ACTION);
 			setFlagOff(Flag.MANDATORY_TARGET);
 		}
 		toX = p.x;
 		toY = p.y;
-		newAngle = angleTo(p.x, p.y);
+		//setTargetPoint(p);
+		//newAngle = angleToCenter(p.x, p.y);
+		setFlagOn(Flag.MOVING);
 	}
 }

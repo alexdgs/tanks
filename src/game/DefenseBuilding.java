@@ -56,7 +56,7 @@ public abstract class DefenseBuilding extends Building implements Drawable {
 		g2d.translate(x, y);
 		g2d.setColor(team.color);
 		g2d.fill(shape);
-		g2d.drawImage(detail, 0, 0, null);
+		if(detail != null) g2d.drawImage(detail, 0, 0, null);
 		g2d.setTransform(backup);
 		
 		drawAddElements(g2d, x, y);

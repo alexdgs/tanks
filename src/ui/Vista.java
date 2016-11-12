@@ -12,8 +12,8 @@ import game.GameObject;
 
 public class Vista {
 	
-	static final int DEFAULT_VISIBLE_W = Math.min(900, Game.WIDTH);
-	static final int DEFAULT_VISIBLE_H = Math.min(700, Game.HEIGHT);
+	static final int DEFAULT_VISIBLE_W = Math.min(760, Game.WIDTH);
+	static final int DEFAULT_VISIBLE_H = Math.min(760, Game.HEIGHT);
 	
 	public static final int LEFT = 0;
 	public static final int DOWN = 1;
@@ -78,6 +78,5 @@ public class Vista {
 		} catch(ConcurrentModificationException cme) {
 			System.out.println("Concurrent issue. Continue");
 		}
-		
 	}
 }

@@ -12,7 +12,7 @@ public class LightningTank extends Tank implements Drawable {
 	static final int BULLET_OFFSET_X = 0;
 	static final int BULLET_OFFSET_Y = 0;
 	static final int RAY_OFFSET = 12;
-	public static final int CONSTRUCTION_TIME = 2000;
+	public static final int CONSTRUCTION_TIME = 1800;
 
 	public LightningTank(Game game, TeamManager team, double x, double y) {
 		super(game, team, x, y, HIT_POINTS, SPEED, VISIBLE_DIST, FIREABLE_DIST, MAX_TIME_TO_FIRE, MAX_TURN_ANGLE, BULLET_OFFSET_X, BULLET_OFFSET_Y, ShapeManager.LIGHTNING_TANK);

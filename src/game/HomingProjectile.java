@@ -23,7 +23,7 @@ public abstract class HomingProjectile extends DirectedProjectile {
 				newAngle = angleTo(target);
 				if(angle != newAngle) {
 					adjustAngle();
-				} else seekingTarget = false;
+				}// else seekingTarget = false;
 			} else seekingTarget = false;
 		}
 		

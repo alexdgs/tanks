@@ -12,8 +12,8 @@ import ui.ShapeManager;
 
 public class Game {
 	
-	public static final int WIDTH = 700;
-	public static final int HEIGHT = 700;
+	public static final int WIDTH = 1500;
+	public static final int HEIGHT = 1500;
 	
 	static final int FLAG_SELECTED_UNITS = 2;
 	static final int FLAG_PLAYER_TARGETED = 10;
@@ -24,7 +24,8 @@ public class Game {
 	
 	public ArrayList<TeamManager> teams;
 	private ArrayList<Unit> selectedUnits;
-	TeamManager playerTeam;
+	private TeamManager playerTeam;
+	public boolean changePlayerTeam;
 	
 	int flags;
 	public boolean playerAIControlled;
@@ -82,7 +83,7 @@ public class Game {
 			gray.addEnemy(team);
 		}
 		
-		playerTeam = gray;
+		setPlayerTeam(gray);
 		teams.add(gray);
 		//teams.add(black);
 	}
@@ -94,6 +95,12 @@ public class Game {
 	
 	public void move() {
 		int teamCounter = 0;
+		
+		if(changePlayerTeam){
+			changePlayerTeam();
+			changePlayerTeam = false;
+		}
+		
 		for(TeamManager team : teams){
 			team.step();
 			if(team.isFlagOn(TeamManager.Flag.ACTIVE)) teamCounter++;
@@ -102,13 +109,13 @@ public class Game {
 		if(teamCounter < 3 && !playerAIControlled) {
 			TeamManager target = null;
 			for(TeamManager tm : teams) {
-				if(tm != playerTeam && tm.isFlagOn(TeamManager.Flag.ACTIVE)) {
+				if(tm != getPlayerTeam() && tm.isFlagOn(TeamManager.Flag.ACTIVE)) {
 					target = winner = tm;
 					break;
 				}
 			}
 			
-			for(Unit u : playerTeam.getUnits()) {
+			for(Unit u : getPlayerTeam().getUnits()) {
 				u.targetPoint = target.getBasePoint();
 				u.setFlagOn(Unit.Flag.AI_CONTROLLED);
 			}
@@ -148,10 +155,40 @@ public class Game {
 		newGameObjects.clear();
 	}
 	
+	public void scheduleChangePlayerTankTeam() {
+		changePlayerTeam = true;
+	}
+	
+	public void changePlayerTeam(){
+		synchronized (teams) {
+			synchronized (getPlayerTeam()) {
+				synchronized (selectedUnits) {
+					int index = teams.indexOf(getPlayerTeam());
+					int newIndex = (index + 1) % teams.size();
+					ArrayList<Unit> unitsToMove = new ArrayList<Unit>();
+					for(Unit u : selectedUnits){
+						unitsToMove.add(u);
+					}
+					for(Unit u : unitsToMove){
+						teams.get(index).getUnits().remove(u);
+						teams.get(newIndex).addUnit(u);
+					}
+					for(Unit u : teams.get(index).getUnits()) {
+						u.setFlagOn(Unit.Flag.AI_CONTROLLED);
+					}
+					setPlayerTeam(teams.get(newIndex));
+				}
+				
+			}
+		}
+		changePlayerTeam = false;
+	}
+	
+	
 	public boolean processSelectionAt(Point p) {
-		if(playerTeam == null) return false;
+		if(getPlayerTeam() == null) return false;
 		Unit newSelection = null;
-		for(Unit u : playerTeam.getUnits()) {
+		for(Unit u : getPlayerTeam().getUnits()) {
 			if(u.getBounds().contains(p) && u instanceof Selectable && u.isFlagOn(GameObject.Flag.SELECTABLE)) {
 				((Selectable)u).select();
 				newSelection = u;
@@ -166,7 +203,7 @@ public class Game {
 		} else if(isFlagOn(FLAG_SELECTED_UNITS)) {
 			Unit target = null;
 			for(TeamManager tm : teams) {
-				if(playerTeam.enemies.contains(tm)) {
+				if(getPlayerTeam().enemies.contains(tm)) {
 					for(Unit u : tm.getUnits()) {
 						if(u.getBounds().contains(p)) {
 							target = u;
@@ -189,13 +226,13 @@ public class Game {
 	}
 	
 	public void processSelectionAt(Point p, Dimension d) {
-		if(playerTeam == null) return;
+		if(getPlayerTeam() == null) return;
 		
 		unselect();
 		ArrayList<Unit> newSelection = new ArrayList<Unit>();
 		Rectangle area = new Rectangle(p, d);
 		
-		for(Unit u : playerTeam.getUnits()) {
+		for(Unit u : getPlayerTeam().getUnits()) {
 			if(u instanceof Selectable && u.isFlagOn(GameObject.Flag.SELECTABLE) && u.getBounds().intersects(area)) {
 				((Selectable)u).select();
 				newSelection.add(u);
@@ -223,23 +260,32 @@ public class Game {
 	}
 	
 	public void addPlayerTeamTank() {
-		Tank t = new SwarmTank(this, playerTeam, playerTeam.getBasePoint().x, playerTeam.getBasePoint().y);
-		t.setFlagOn(Unit.Flag.AI_CONTROLLED);
-		t.targetPoint = t.getRandomMapPoint();
-		playerTeam.addUnit(t);
+		Tank t = new IdleTank(this, getPlayerTeam(), getPlayerTeam().getBasePoint().x, getPlayerTeam().getBasePoint().y);
+		t.setFlagOn(GameObject.Flag.SELECTABLE);
+		t.setFlagOff(Unit.Flag.AI_CONTROLLED);
+		t.setFlagOff(Unit.Flag.ENEMY_AWARE);
+		getPlayerTeam().addUnit(t);
 	}
 	
 	public void togglePlayerAsTarget() {
 		if(isFlagOn(FLAG_PLAYER_TARGETED)) {
 			for(TeamManager tm : teams) {
-				if(tm != playerTeam && tm.isFlagOn(TeamManager.Flag.ACTIVE)) tm.removeEnemy(playerTeam);
+				if(tm != getPlayerTeam() && tm.isFlagOn(TeamManager.Flag.ACTIVE)) tm.removeEnemy(getPlayerTeam());
 			}
 		} else {
 			for(TeamManager tm : teams) {
-				if(tm != playerTeam && tm.isFlagOn(TeamManager.Flag.ACTIVE)) tm.addEnemy(playerTeam);
+				if(tm != getPlayerTeam() && tm.isFlagOn(TeamManager.Flag.ACTIVE)) tm.addEnemy(getPlayerTeam());
 			}
 		}
 		toggleFlag(FLAG_PLAYER_TARGETED);
+	}
+	
+	public void toggleEnemyAwareFlag() {
+		synchronized (selectedUnits) {
+			for(Unit u : selectedUnits){
+				u.toggleFlag(Flag.ENEMY_AWARE);
+			}
+		}
 	}
 	
 	public String getWinnerName() {
@@ -247,6 +293,14 @@ public class Game {
 		return null;
 	}
 	
+	public TeamManager getPlayerTeam() {
+		return playerTeam;
+	}
+
+	public void setPlayerTeam(TeamManager playerTeam) {
+		this.playerTeam = playerTeam;
+	}
+
 	public boolean isFlagOn(int flag) {
 		return (flags & (1 << flag)) != 0;
 	}

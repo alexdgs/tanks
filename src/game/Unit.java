@@ -34,9 +34,9 @@ public abstract class Unit extends GameObject implements Steppable {
 		Unit newTarget = null;
 		for(TeamManager team : team.enemies) {
 			for(Unit u : team.getUnits()) {
-				if(u.isFlagOn(Flag.ALIVE) && distTo(u) <= visibleDist) {
-					if(newTarget == null || (!newTarget.isFlagOn(Flag.CAN_FIRE) && u.isFlagOn(Flag.CAN_FIRE))) newTarget = u;
-					else if(newTarget.hitPoints > u.hitPoints) newTarget = u;
+				if(u.isFlagOn(Flag.ALIVE) && distToCenter(u) <= visibleDist) {
+					if(newTarget == null || (!newTarget.isFlagOn(Flag.CAN_FIRE) && u.isFlagOn(Flag.CAN_FIRE))
+							|| (newTarget.isFlagOn(Flag.CAN_FIRE) == u.isFlagOn(Flag.CAN_FIRE) && newTarget.hitPoints > u.hitPoints)) newTarget = u;
 				}
 			}
 		}
@@ -55,33 +55,43 @@ public abstract class Unit extends GameObject implements Steppable {
 		return p;
 	}
 	
+	public void checkUnitStrategy() {
+		
+	}
+	
 	public void heal(int points) {
 		if(hitPoints > 0) {
 			healthBar.update(hitPoints = Math.min(hitPoints + points, maxHitPoints));
 			effects.add(new Circle((int)centerX, (int)centerY, w, Circle.Type.HEAL));
 			game.newGameObjects.add(new Text(game, points, centerX - 10, centerY));
+			checkUnitStrategy();
 		}
-		
+	}
+	
+	public boolean hitted(int damage, double x, double y) {
+		boolean result = hitted(damage);
+		if(!result) underAttack(x, y);
+		return result;
 	}
 	
 	public boolean hitted(int damage) {
+		if(hitPoints < 1) return false;
 		healthBar.update(hitPoints = Math.max(0, hitPoints-damage));
-		//if(damage > 0) game.newGameObjects.add(new Text(game, damage*-1, centerX - 10, centerY));
 		
 		if(hitPoints == 0) {
-			if (this instanceof Garage) team.remainingGarages--;
 			team.unitLost();
-			setFlagOff(Flag.ALIVE);
+			destroy();
 			return true;
-		} else underAttack();
+		}
 		return false;
 	}
 	
-	public void underAttack() {
+	public void underAttack(double x, double y) {
 		
 	}
 	
 	public void destroy() {
+		setFlagOff(Flag.ALIVE);
 		game.newGameObjects.add(new Circle((int)centerX, (int)centerY, w, Circle.Type.EXPL));
 	}
 	
@@ -89,6 +99,12 @@ public abstract class Unit extends GameObject implements Steppable {
 		this.target = target;
 		setFlagOn(Flag.MANDATORY_TARGET);
 		setFlagOff(Flag.OVERRIDE_ACTION);
+	}
+	
+	public void setTargetPoint(Point p) {
+		this.targetPoint = p;
+		toX = p.x;
+		toY = p.y;
 	}
 	
 	public void selectedAsTarget() {

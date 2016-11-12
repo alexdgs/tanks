@@ -24,7 +24,7 @@ public class SmallMissile extends HomingProjectile implements Drawable {
 	
 	@Override
 	public void step() {
-		bounce();
+		//bounce();
 		move();
 		updateCenter();
 		advanceTime();

@@ -9,13 +9,16 @@ import java.awt.geom.AffineTransform;
 
 public abstract class Tank extends MoveableUnit implements Drawable, Selectable {
 	
+	static final int STRATEGY_NORMAL = 1;
+	static final int STRATEGY_REPAIR = 2;
+	
 	static final int WIDTH = 30;
 	static final int HEIGHT = 30;
 	static final int HALF_WIDTH = WIDTH/2;
 	static final int HALF_HEIGHT = HEIGHT/2;
 	
 	static final double MAX_DIF_ANGLE_TO_MOVE = Math.PI/360.0;
-	static final double MAX_DIF_ANGLE_TO_FIRE = Math.PI/360.0;
+	static final double MAX_DIF_ANGLE_TO_FIRE = Math.PI/90.0;
 	
 	int type;
 	int timeToFire;
@@ -27,6 +30,8 @@ public abstract class Tank extends MoveableUnit implements Drawable, Selectable 
 	Image imgTank;
 	Shape shape;
 	
+	int strategy;
+	
 	public Tank(Game game, TeamManager team, double x, double y, int hitPoints, double speed, double visibleDist, double fireableDist, int maxTimeToFire, double maxTurnAngle, int bulletOffsetX, int bulletOffsetY, int type) {
 		super(game, team, x, y, WIDTH, HEIGHT, hitPoints, speed, visibleDist);
 		this.maxTimeToFire = maxTimeToFire;
@@ -36,11 +41,12 @@ public abstract class Tank extends MoveableUnit implements Drawable, Selectable 
 		this.bulletOffsetY = bulletOffsetY;
 		this.type = type;
 		timeToFire = 0;
+		strategy = STRATEGY_NORMAL;
 		shape = game.shapeManager.getShape(type);
 		if(team.isFlagOn(TeamManager.Flag.AI_TEAM)) {
 			setFlagOn(Flag.AI_CONTROLLED);
-			//targetPoint = getRandomBaseEnemyPoint();
 		} else setFlagOn(Flag.SELECTABLE);
+		setFlagOn(Flag.ENEMY_AWARE);
 		setFlagOn(Flag.CAN_FIRE);
 	}
 	
@@ -55,46 +61,62 @@ public abstract class Tank extends MoveableUnit implements Drawable, Selectable 
 		if(isFlagOn(Flag.MANDATORY_TARGET) && !target.isFlagOn(Flag.ALIVE)) {
 			target = null;
 			setFlagOff(Flag.MANDATORY_TARGET);
+			setFlagOff(Flag.MOVING);
 		}
 		
-		if(isFlagOn(Flag.MANDATORY_TARGET) || (!isFlagOn(Flag.OVERRIDE_ACTION) && isFlagOn(Flag.AI_CONTROLLED) && (target = getTarget()) != null)) {
-			double distToTarget = distTo(target);
+		if(isFlagOn(Flag.MANDATORY_TARGET) || (!isFlagOn(Flag.OVERRIDE_ACTION) && isFlagOn(Flag.ENEMY_AWARE) && (target = getTarget()) != null)) {
+			targetPoint = null;
+			double distToTarget = distToCenter(target);
 			if(distToTarget > fireableDist) {
 				setFlagOff(Flag.FIRING);
-				moveToPoint(new Point((int)target.x, (int)target.y), false);
+				setTargetPoint(new Point((int)target.x, (int)target.y));
 				setFlagOn(Flag.MOVING);
 			} else {
 				setFlagOff(Flag.MOVING);
 				newAngle = angleTo(target);
-				if(angle != newAngle) {
+				if(Math.abs(angle - newAngle) > MAX_DIF_ANGLE_TO_MOVE) {
 					angle = newAngle(angle, newAngle, maxTurnAngle);
-					if(Math.abs(angle - newAngle) <= MAX_DIF_ANGLE_TO_FIRE) setFlagOn(Flag.FIRING);
-					else setFlagOff(Flag.FIRING);
-				} else setFlagOn(Flag.FIRING);
+				}
+				if(Math.abs(angle - newAngle) <= MAX_DIF_ANGLE_TO_FIRE) {
+					setFlagOn(Flag.FIRING);
+				} else {
+					setFlagOff(Flag.FIRING);
+				}
 			}
 		} else {
 			setFlagOff(Flag.FIRING);
 		}
 		
 		if(isFlagOn(Flag.MOVING)) {
-			if(Math.abs(angle - newAngle) <= MAX_DIF_ANGLE_TO_MOVE) {
-				moveStraight();
-				if(distTo(toX, toY) < 5) {
-					setFlagOff(Flag.MOVING);
-					setFlagOff(Flag.OVERRIDE_ACTION);
-					targetPoint = null;
+			if(distCenterTo(toX, toY) < 5) {
+				setFlagOff(Flag.MOVING);
+				setFlagOff(Flag.OVERRIDE_ACTION);
+				targetPoint = null;
+			} else {
+				newAngle = angleToCenter(toX, toY);
+				if(Math.abs(angle - newAngle) <= MAX_DIF_ANGLE_TO_MOVE) {
+					moveStraight();
+				} else {
+					angle = newAngle(angle, newAngle, maxTurnAngle);
 				}
-			}
-			
-			if(angle != newAngle) {
-				angle = newAngle(angle, newAngle, maxTurnAngle);
 			}
 		} else if(!isFlagOn(Flag.FIRING)){
 			if(isFlagOn(Flag.AI_CONTROLLED)) {
 				if(targetPoint != null) moveToPoint(targetPoint, false);
 				else {
-					//targetPoint = getRandomBaseEnemyPoint();
-					/*if(targetPoint == null)*/ moveToPoint(getRandomMapPoint(), false);
+					if(strategy == STRATEGY_REPAIR){
+						if(distCenterTo(team.xHealer, team.yHealer) >= Healer.VISIBLE_DIST) {
+							moveToPoint(new Point(team.xHealer, team.yHealer), false);
+						}
+					} else {
+						if(team.strategy == TeamManager.STRATEGY_BASE){
+							if(distCenterTo(team.getBasePoint().x, team.getBasePoint().y) > TeamManager.MAX_DIST_BASE_ON_DEFENSE){
+								moveToPoint(team.getBasePoint(), false);
+							}
+						} else {
+							moveToPoint(getRandomMapPoint(), false);
+						} 
+					}
 				}
 			}
 		}
@@ -114,6 +136,35 @@ public abstract class Tank extends MoveableUnit implements Drawable, Selectable 
 	
 	public void addSteps() {
 		
+	}
+	
+	@Override
+	public boolean hitted(int damage) {
+		boolean out = super.hitted(damage);
+		if(!out) {
+			int oldStrategy = strategy;
+			checkUnitStrategy();
+			if(strategy == STRATEGY_REPAIR && oldStrategy == STRATEGY_NORMAL && !isFlagOn(Flag.FIRING)) {
+				setFlagOff(Flag.MOVING);
+				targetPoint = null;
+			}
+		}
+		return out;
+	}
+	
+	@Override
+	public void checkUnitStrategy() {
+		double healthRate = hitPoints/(double)maxHitPoints;
+		if(strategy == STRATEGY_NORMAL && healthRate <= 0.3 && team.healerAvailable) {
+			strategy = STRATEGY_REPAIR;
+		} else if((strategy == STRATEGY_REPAIR && healthRate > 0.9) || !team.healerAvailable) {
+			strategy = STRATEGY_NORMAL;
+		}
+	}
+	
+	public void defendPoint(double x, double y) {
+		targetPoint = new Point((int)x, (int)y);
+		//moveToPoint(new Point((int)x, (int)y), false);
 	}
 	
 	public int randomTimeToFire() {
@@ -150,6 +201,12 @@ public abstract class Tank extends MoveableUnit implements Drawable, Selectable 
 	public void drawDetail(Graphics2D g2d, int x, int y) {
 		g2d.setColor(Color.WHITE);
 		g2d.fillRect(9, 12, 6, 6);
+		if(!isFlagOn(Flag.AI_CONTROLLED)) {
+			if(isFlagOn(Flag.ENEMY_AWARE)) {
+				g2d.setColor(Color.RED);
+				g2d.fillRect(9, 12, 6, 6);
+			}
+		}
 	}
 	
 	static class Attribute

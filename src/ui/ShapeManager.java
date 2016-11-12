@@ -30,15 +30,22 @@ public class ShapeManager {
 	public static final int LIGHTNING_TANK = 13;
 	public static final int LASER_TANK = 14;
 	public static final int BOMB_TANK = 15;
+	public static final int MINE_TANK = 16;
+	public static final int SECRET_TANK = 17;
 	
 	public static final int GUARD_TOWER = 20;
 	public static final int PILLBOX = 21;
+	public static final int DOUBLE_GUN = 22;
+	public static final int HEALER = 23;
 	
 	public static final int MISSILE_1 = 25;
 	public static final int MISSILE_2 = 26;
 	public static final int MISSILE_3 = 27;
 	public static final int TURRET = 28;
 	public static final int SMALL_MISSILE = 29;
+	public static final int MULTIPLE_MISSILE = 30;
+	public static final int EAGER_SMALL_MISSILE = 31;
+	public static final int MINE = 32;
 	
 	static final String[] IMG_FILENAME = {
 		"src/img/tank.png",
@@ -57,20 +64,23 @@ public class ShapeManager {
 		"src/img/lightning_tank.png",
 		"src/img/laser_tank.png",
 		"src/img/bomb_tank.png",
-		null,
-		null,
+		"src/img/mine_tank.png",
+		"src/img/secret_tank.png",
 		null,
 		null,
 		"src/img/guardtower.png",
 		"src/img/pbox.png",
-		null,
-		null,
+		"src/img/double_gun.png",
+		"src/img/healer.png",
 		null,
 		"src/img/missile1.png",
 		"src/img/missile2.png",
 		"src/img/missile3.png",
 		"src/img/turret.png",
-		"src/img/small_missile.png"
+		"src/img/small_missile.png",
+		"src/img/multiple_missile.png",
+		"src/img/eager_small_missile.png",
+		"src/img/mine.png"
 	};
 	
 	Shape[] shapes;

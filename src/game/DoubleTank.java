@@ -32,6 +32,6 @@ public class DoubleTank extends Tank {
 	}
 	
 	public int getMultiplier() {
-		return (multiplier * -1);
+		return (multiplier *= -1);
 	}
 }

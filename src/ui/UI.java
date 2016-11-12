@@ -101,6 +101,8 @@ public class UI extends JPanel {
 		if(timeShowMovingInd > 0) {
 			alphaMovingInd = (float)timeShowMovingInd/TIME_DRAW_MOVING_IND;
 			timeShowMovingInd--;
+		} else {
+			movingIndicator = false;
 		}
 		
 		if(!isFlagOn(Flag.WINNER)) {
@@ -167,7 +169,6 @@ public class UI extends JPanel {
 	}
 	
 	public void dragged(Point p1, Point p2) {
-		//dragging(p1, p2);
 		Point start = new Point(xViewOffset + startX, yViewOffset + startY);
 		Dimension area = new Dimension(selectionWidth, selectionHeight);
 		try {
@@ -176,6 +177,14 @@ public class UI extends JPanel {
 			
 		}
 		selectingArea = false;
+	}
+	
+	public void scheduleChangePlayerTeam() {
+		game.changePlayerTeam = true;
+	}
+	
+	public void toggleEnemyAwareFlag() {
+		game.toggleEnemyAwareFlag();
 	}
 	
 	public Rectangle getViewableArea() {
@@ -232,7 +241,7 @@ public class UI extends JPanel {
 		vista.paint(g2d);
 		
 		if(showInfo) drawInfo(g2d, infoX, INFO_Y, INFO_W, INFO_H_INIT + numTeams*INFO_H_TEAM);
-		
+		drawCurrTeam(g2d, 5, HEIGHT-15, 150, 30);
 		//drawSpike(g2d);
 	}
 	
@@ -259,6 +268,15 @@ public class UI extends JPanel {
 			g2d.drawString(df.format(team.efficacy), x + 155, lineHeight);
 			g2d.drawString(Integer.toString(team.remainingGarages), x + 225, lineHeight);
 		}
+	}
+	
+	public void drawCurrTeam(Graphics2D g2d, int x, int y, int w, int h) {
+		g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, INFO_APLHA));
+		g2d.setColor(Color.BLACK);
+		g2d.fillRect(x, y, w, h);
+		g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
+		g2d.setColor(game.getPlayerTeam().color);
+		g2d.drawString("Curr.Team: " + game.getPlayerTeam().string, x+10, y+10);
 	}
 	
 	public void drawSpike(Graphics2D g2d) {

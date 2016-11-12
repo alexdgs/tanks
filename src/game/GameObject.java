@@ -167,6 +167,12 @@ public class GameObject {
 		return (dx < 0.0 ? Math.atan(dy/dx)+Math.PI : Math.atan(dy/dx));
 	}
 	
+	public double angleToCenter(double x, double y) {
+		double dx = x - this.centerX;
+		double dy = y - this.centerY;
+		return (dx < 0.0 ? Math.atan(dy/dx)+Math.PI : Math.atan(dy/dx));
+	}
+	
 	public static double angleBetween(double x1, double y1, double x2, double y2) {
 		double dx = x2 - x1;
 		double dy = y2 - y1;
@@ -222,6 +228,7 @@ public class GameObject {
 		public static final int MOVEABLE = 2;
 		public static final int HITTABLE = 3;
 		public static final int CAN_FIRE = 4;
+		public static final int ENEMY_AWARE = 8;
 		public static final int AI_CONTROLLED = 9;
 		public static final int SELECTED = 10;
 		public static final int MOVING = 11;

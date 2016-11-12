@@ -5,22 +5,24 @@ import java.awt.geom.Ellipse2D;
 
 public class CurvyBullet extends HomingProjectile implements Drawable {
 	
-	static final int DIAMETER = 6;
+	static final int DIAMETER = 5;
 	static final int HALF_DIAMETER = DIAMETER/2;
 	static final double SPEED = 1.0;
-	static final int DAMAGE = 4;
+	static final int DAMAGE = 3;
 	static final double HOMING_RATE = Math.PI/180.0;
 	
-	static final double MAX_DEV_ANGLE = Math.PI /3.0;
+	static final double MAX_DEV_ANGLE = Math.PI/2.25;
 	static final double MIN_DEV_ANGLE = MAX_DEV_ANGLE*-1;
 	static final double DELTA_ANGLE = Math.PI/30.0;
+	
+	static final double MAGNET_DISTANCE = 40.0;
 	
 	double devAngle;
 	boolean incAngle;
 	
 	public CurvyBullet(Unit owner, double x, double y, Unit target, double angle) {
 		super(owner.game, owner.team, owner, x, y, DIAMETER, DIAMETER, target, SPEED, angle, HOMING_RATE);
-		devAngle = 0.0;
+		devAngle = Math.random() * (Math.random() > 0.5 ? MAX_DEV_ANGLE : MIN_DEV_ANGLE);
 		incAngle = false;
 	}
 	
@@ -51,10 +53,18 @@ public class CurvyBullet extends HomingProjectile implements Drawable {
 				newAngle = angleTo(target);
 				if(angle != newAngle) {
 					adjustAngle();
-				}// else seekingTarget = false;
-			} else seekingTarget = false;
+				}
+			} else {
+				seekingTarget = false;
+				speed = 1;
+			}
+		} else {
+			getTarget();
+			if(target != null) {
+				seekingTarget = true;
+				speed = SPEED;
+			}
 		}
-		
 		moveStraight();
 	}
 	
@@ -75,6 +85,17 @@ public class CurvyBullet extends HomingProjectile implements Drawable {
 		}
 		dX = speed*cos(sumAngles(angle, devAngle));
 		dY = speed*sin(sumAngles(angle, devAngle));
+	}
+	
+	public void getTarget() {
+		for(TeamManager team : team.enemies) {
+			for(Unit u : team.getUnits()) {
+				if(u.isFlagOn(Flag.ALIVE) && distToCenter(u) <= MAGNET_DISTANCE) {
+					target = u;
+					return;
+				}
+			}
+		}
 	}
 	
 	public boolean hit(GameObject go) {

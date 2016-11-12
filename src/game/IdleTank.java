@@ -6,7 +6,7 @@ import ui.ShapeManager;
 
 public class IdleTank extends Tank {
 		
-	static final double SPEED = 1.0;
+	static final double SPEED = 1.25;
 	static final int HIT_POINTS = 100;
 	static final double VISIBLE_DIST = 170.0;
 	static final double FIREABLE_DIST = 150.0;

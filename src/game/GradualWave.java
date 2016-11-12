@@ -2,7 +2,7 @@ package game;
 
 public class GradualWave extends Wave {
 	
-	static final int DAMAGE = 60;
+	static final int DAMAGE = 120;
 	static final int MAX_RADIUS = 100;
 	
 	float alpha;

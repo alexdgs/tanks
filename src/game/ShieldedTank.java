@@ -23,8 +23,9 @@ public class ShieldedTank extends Tank {
 	
 	@Override
 	public void fire() {
-		//game.newGameObjects.add(new SmallBullet(game, team, this, x + bulletOffsetX, y + bulletOffsetY, angle));
-		game.newGameObjects.add(new CurvyBullet(this, x + bulletOffsetX, y + bulletOffsetY, target, angle));
+		game.newGameObjects.add(new SmallBullet(game, team, this, x + bulletOffsetX, y + bulletOffsetY, angle));
+		//game.newGameObjects.add(new CurvyBullet(this, x + bulletOffsetX, y + bulletOffsetY, target, angle));
+		//game.newGameObjects.add(new MultipleMissile(game, team, this, x + bulletOffsetX, y + bulletOffsetY, angle, target));
 	}
 	
 	@Override

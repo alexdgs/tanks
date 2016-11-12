@@ -22,7 +22,7 @@ public abstract class ConstructorBuilding extends Building {
 	public void drawAddElements(Graphics2D g2d, int x, int y) {
 		drawHealthBar(g2d, x, y);
 		drawProgressBar(g2d, x, y);
-		drawHealth(g2d, x, y);
+		//drawHealth(g2d, x, y);
 	}
 	
 	public void drawProgressBar(Graphics2D g2d, int x, int y) {

@@ -21,6 +21,7 @@ public class MissileTank extends Tank {
 	
 	@Override
 	public void fire() {
-		game.newGameObjects.add(new Missile(game, team, this, x + bulletOffsetX, y + bulletOffsetY, angle));
+		//game.newGameObjects.add(new Missile(game, team, this, x + bulletOffsetX, y + bulletOffsetY, angle));
+		game.newGameObjects.add(new MultipleMissile(game, team, this, centerX - MultipleMissile.HALF_DIAMETER, centerY - MultipleMissile.HALF_DIAMETER, target, angle));
 	}
 }

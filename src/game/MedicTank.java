@@ -1,5 +1,6 @@
 package game;
 
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.Point;
@@ -17,7 +18,7 @@ public class MedicTank extends Tank {
 	static final double MAX_TURN_ANGLE = Math.PI/120.0;
 	static final int MAX_TIME_TO_HEAL = 70;
 	static final int HEAL_POINTS = 1;
-	public static final int CONSTRUCTION_TIME = 1000;
+	public static final int CONSTRUCTION_TIME = 900;
 	
 	static final Image IMG_MEDIC_SIGN = (new ImageIcon("src/img/medic_sign.png")).getImage();
 	
@@ -40,16 +41,17 @@ public class MedicTank extends Tank {
 			return;
 		}
 		
-		if(target == null || !target.isFlagOn(Flag.ALIVE)|| target.hitPoints == target.maxHitPoints || distTo(target) > healableDist) {
+		if(target == null || !target.isFlagOn(Flag.ALIVE)|| target.hitPoints == target.maxHitPoints || distToCenter(target) > healableDist) {
 			target = getTarget();
 		}
 		
 		if(target != null) {
-			double distToTarget = distTo(target);
+			double distToTarget = distToCenter(target);
 			if(distToTarget > healableDist) {
 				setFlagOff(Flag.HEALING);
 				moveToPoint(new Point((int)target.x, (int)target.y), false);
 			} else {
+				targetPoint = null;
 				setFlagOff(Flag.MOVING);
 				setFlagOn(Flag.HEALING);
 			}
@@ -58,10 +60,14 @@ public class MedicTank extends Tank {
 		}
 		
 		if(isFlagOn(Flag.MOVING)) {
-			if(angle != newAngle) angle = newAngle(angle, newAngle, maxTurnAngle);
+			newAngle = angleToCenter(toX, toY);
+			if(Math.abs(angle - newAngle) >= Math.PI/180.0) angle = newAngle(angle, newAngle, maxTurnAngle);
 			else {
 				moveStraight();
-				if(distTo(toX, toY) < 5) setFlagOff(Flag.MOVING);
+				if(distCenterTo(toX, toY) < 5) {
+					setFlagOff(Flag.MOVING);
+					targetPoint = null;
+				}
 			}
 		} else if(!isFlagOn(Flag.HEALING)){
 			moveToPoint(getRandomMapPoint(), false);
@@ -80,7 +86,7 @@ public class MedicTank extends Tank {
 		Unit newTarget = null;
 		for(Unit u : team.getUnits()) {
 			if(u != this && u instanceof Unit && u.isFlagOn(Flag.ALIVE)) {
-				if(u.hitPoints < u.maxHitPoints && distTo(u) <= visibleDist) {
+				if(u.hitPoints < u.maxHitPoints && distToCenter(u) <= visibleDist) {
 					newTarget = u;
 					break;
 				}
@@ -97,5 +103,8 @@ public class MedicTank extends Tank {
 	@Override
 	public void drawDetail(Graphics2D g2d, int x, int y) {
 		g2d.drawImage(IMG_MEDIC_SIGN, 6, 9, null);
+		g2d.setColor(Color.WHITE);
+		g2d.fillRect(24, 15, 3, 6);
+		g2d.fillRect(24, 9, 3, 6);
 	}
 }

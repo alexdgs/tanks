@@ -17,6 +17,6 @@ public abstract class Projectile extends GameObject implements Steppable {
 	}
 	
 	public void hit(Unit u, int damage) {
-		if(u.hitted(damage)) team.score(1);
+		if(u.hitted(damage, centerX, centerY)) team.score(1);
 	}
 }

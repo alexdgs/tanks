@@ -11,7 +11,7 @@ public class LaserTank extends Tank implements Drawable {
 	static final int MAX_TIME_TO_FIRE = 40;
 	static final int BULLET_OFFSET_X = 0;
 	static final int BULLET_OFFSET_Y = 0;
-	public static final int CONSTRUCTION_TIME = 1400;
+	public static final int CONSTRUCTION_TIME = 1800;
 
 	public LaserTank(Game game, TeamManager team, double x, double y) {
 		super(game, team, x, y, HIT_POINTS, SPEED, VISIBLE_DIST, FIREABLE_DIST, MAX_TIME_TO_FIRE, MAX_TURN_ANGLE, BULLET_OFFSET_X, BULLET_OFFSET_Y, ShapeManager.LASER_TANK);

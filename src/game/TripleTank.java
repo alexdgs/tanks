@@ -12,7 +12,7 @@ public class TripleTank extends Tank {
 	static final int MAX_TIME_TO_FIRE = 35;
 	static final int BULLET_OFFSET_X = HALF_WIDTH - TinyBullet.HALF_DIAMETER;
 	static final int BULLET_OFFSET_Y = HALF_HEIGHT - TinyBullet.HALF_DIAMETER;
-	public static final int CONSTRUCTION_TIME = 1600;
+	public static final int CONSTRUCTION_TIME = 1500;
 	
 	static final int ABSOLUTE_OFFSET = 12;
 	int multiplier = 1;

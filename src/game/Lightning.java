@@ -43,12 +43,14 @@ public class Lightning extends InstantProjectile implements Drawable {
 		generateLightning(startX, startY);
 	}
 	
-	public void generateLightning(double fromX, double fromY) {
+	public void generateLightning(double startX, double startY) {
+		double fromX = startX;
+		double fromY = startY;
 		numPoints = new ArrayList<Integer>();
 		
 		while(target != null) {
 			targets.add(target);
-			generateRay(fromX, fromY, target.centerX, target.centerY);
+			generateRay(fromX, fromY, target.centerX, target.centerY, startX, startY);
 			fromX = target.centerX;
 			fromY = target.centerY;
 			
@@ -75,15 +77,15 @@ public class Lightning extends InstantProjectile implements Drawable {
 		}
 	}
 	
-	public void generateRay(double x1, double y1, double x2, double y2) {
+	public void generateRay(double x1, double y1, double x2, double y2, double xo, double yo) {
 		double angle = angleBetween(x1, y1, x2, y2);
 		double perpAngle = sumAngles(angle, HALF_PI);
 		double dist = distBetween(x1, y1, x2, y2);
 		double lastDist = 0.0;
-		Integer[] rX = new Integer[50];
-		Integer[] rY = new Integer[50];
-		rX[0] = (int)x1;
-		rY[0] = (int)y1;
+		ArrayList<Integer> rX = new ArrayList<Integer>();
+		ArrayList<Integer> rY = new ArrayList<Integer>();
+		rX.add((int)x1);
+		rY.add((int)y1);
 		int i = 1;
 		while(lastDist < dist) {
 			lastDist = Math.min(lastDist + RAY_MIN_DELTA + (Math.random()*RAY_MAX_DELTA), dist);
@@ -93,16 +95,15 @@ public class Lightning extends InstantProjectile implements Drawable {
 			double dy = lastDist*sin(angle);
 			double devX = dev*cos(perpAngle);
 			double devY = dev*sin(perpAngle);
-			rX[i] = rX[0] + (int)(dx + devX);
-			rY[i] = rY[0] + (int)(dy + devY);
+			rX.add(rX.get(0) + (int)(dx + devX - xo));
+			rY.add(rY.get(0) + (int)(dy + devY - yo));
 			i++;
 		}
-		/*System.out.println("Num points: " + i);
-		for(int j = 0; j < i; j++) {
-			System.out.println(rX[j] + "," + rY[j]);
-		}*/
-		rayX.add(rX);
-		rayY.add(rY);
+		rX.set(0, rX.get(0) - (int)xo);
+		rY.set(0, rY.get(0) - (int)yo);
+		
+		rayX.add(rX.toArray(new Integer[rX.size()]));
+		rayY.add(rY.toArray(new Integer[rY.size()]));
 		numPoints.add(i);
 	}
 
@@ -129,7 +130,7 @@ public class Lightning extends InstantProjectile implements Drawable {
 	public void draw(Graphics2D g2d, int x, int y) {
 		AffineTransform atBackup = g2d.getTransform();
 		Stroke backup = g2d.getStroke();
-		//g2d.translate(x, y);
+		g2d.translate(x, y);
 		g2d.setStroke(new BasicStroke(THICKNESS));
 		g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
 		g2d.setColor(COLOR);
