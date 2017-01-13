@@ -44,7 +44,7 @@ public class IdleTank extends Tank {
 	}*/
 	
 	@Override
-	public void drawAddElements(Graphics2D g2d, int x, int y) {
+	public void drawHUDElements(Graphics2D g2d, int x, int y) {
 		g2d.setColor(Color.WHITE);
 		g2d.drawString(Integer.toString(hits), x, y-5);
 	}

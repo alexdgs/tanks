@@ -25,7 +25,7 @@ public class TrayIconManager {
 		}
 	}
 	
-	public void showMessage(String s) {
-		trayIcon.displayMessage("Winner!", s, TrayIcon.MessageType.INFO);
+	public void showMessage(String title, String text) {
+		trayIcon.displayMessage(title, text, TrayIcon.MessageType.INFO);
 	}
 }

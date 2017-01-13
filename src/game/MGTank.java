@@ -28,13 +28,7 @@ public class MGTank extends Tank implements Drawable {
 	}
 	
 	@Override
-	public void step() {
-		if(hitPoints < 1) {
-			setFlagOff(Flag.ALIVE);
-			destroy();
-			return;
-		}
-		
+	public void move() {
 		if(isFlagOn(Flag.MANDATORY_TARGET) && !target.isFlagOn(Flag.ALIVE)) {
 			target = null;
 			setFlagOff(Flag.MANDATORY_TARGET);
@@ -81,7 +75,14 @@ public class MGTank extends Tank implements Drawable {
 								moveToPoint(team.getBasePoint(), false);
 							}
 						} else {
-							moveToPoint(getRandomMapPoint(), false);
+							if(group != null) {
+								if(group.deployed) {
+									Point p = group.getTargetPoint();
+									moveToPoint(p != null ? p : getRandomMapPoint(), false);
+								}
+							} else {
+								moveToPoint(getRandomMapPoint(), false);
+							}
 						}
 					}
 				}
@@ -92,15 +93,14 @@ public class MGTank extends Tank implements Drawable {
 			fire();
 			timeToFire = maxTimeToFire;
 		} else if(timeToFire > 0) timeToFire--;
-		
-		addSteps();
-		stepEffects();
 	}
 	
 	@Override
 	public void addSteps() {
-		turret.setTarget(target);
-		turret.step();
+		if(timeRemainingFrozen == 0) {
+			turret.setTarget(target);
+			turret.step();
+		}
 	};
 	
 	@Override

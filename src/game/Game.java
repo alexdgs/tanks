@@ -7,16 +7,24 @@ import java.awt.Dimension;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.util.ArrayList;
+import java.util.Stack;
 
 import ui.ShapeManager;
 
 public class Game {
 	
-	public static final int WIDTH = 1500;
-	public static final int HEIGHT = 1500;
+	public static final int DEFAULT_LOOP_MILIS = 11;
+	
+	public static final int WIDTH = 1920;
+	public static final int HEIGHT = 1920;
 	
 	static final int FLAG_SELECTED_UNITS = 2;
 	static final int FLAG_PLAYER_TARGETED = 10;
+	public static final int FLAG_SLOW_MOTION = 11; 
+	public static final int FLAG_FAST_FORWARD = 12;
+	
+	static final int[] SLOW_MOTION_RATES = {2, 4, 8};
+	static final int[] FAST_FORWARD_RATES = {2, 3, 4};
 	
 	private ArrayList<GameObject> gameObjects;
 	ArrayList<GameObject> newGameObjects;
@@ -27,7 +35,13 @@ public class Game {
 	private TeamManager playerTeam;
 	public boolean changePlayerTeam;
 	
+	Stack<TeamManager> garageLostTeams;
+	
+	public int loopMilis = DEFAULT_LOOP_MILIS;
 	int flags;
+	int slowMotionRateIndex = 0;
+	int fastForwardRateIndex = 0;
+	int framesToMove = 0;
 	public boolean playerAIControlled;
 	TeamManager winner;
 	
@@ -39,6 +53,7 @@ public class Game {
 		drawables = new ArrayList<Drawable>();
 		selectedUnits = new ArrayList<Unit>();
 		teams = new ArrayList<TeamManager>();
+		garageLostTeams = new Stack<TeamManager>();
 	}
 	
 	public void setShapeManager(ShapeManager sm) {
@@ -47,10 +62,12 @@ public class Game {
 	
 	public void setUp() {
 		TeamManager blue = new TeamManager(this, Team.CYAN, Color.CYAN, "Cyan", 50, 50, TeamManager.UP, TeamManager.LEFT, true);
+		//TeamManager green2 = new TeamManager(this, Team.GREEN, Color.GREEN, "Green", 50, 50, TeamManager.UP, TeamManager.LEFT, true);
 		//TeamManager red = new TeamManager(this, Team.RED, Color.RED, "Red", 50, Game.HEIGHT/2 - 50, TeamManager.MIDDLE, TeamManager.LEFT, true);
 		TeamManager green = new TeamManager(this, Team.GREEN, Color.GREEN, "Green", Game.WIDTH - 110, 50, TeamManager.UP, TeamManager.RIGHT, true);
 		//TeamManager yellow = new TeamManager(this, Team.YELLOW, Color.YELLOW, "Yellow", Game.WIDTH - 110, Game.HEIGHT/2 - 50, TeamManager.MIDDLE, TeamManager.RIGHT, true);
 		TeamManager magenta = new TeamManager(this, Team.MAGENTA, Color.MAGENTA, "Magenta", 50, Game.HEIGHT - 110, TeamManager.DOWN, TeamManager.LEFT, true);
+		//TeamManager magenta2 = new TeamManager(this, Team.MAGENTA, Color.MAGENTA, "Magenta", Game.WIDTH - 110, Game.HEIGHT - 110, TeamManager.DOWN, TeamManager.RIGHT, true);
 		TeamManager orange = new TeamManager(this, Team.ORANGE, Team.COLOR_ORANGE, "Orange", Game.WIDTH - 110, Game.HEIGHT - 110, TeamManager.DOWN, TeamManager.RIGHT, true);
 		//TeamManager cyan = new TeamManager(this, Team.CYAN, Color.CYAN, "Cyan", Game.X/2 - 50, 50, TeamManager.UP, TeamManager.MIDDLE);
 		TeamManager gray = new TeamManager(this, Team.GRAY, Color.GRAY, "Gray", Game.WIDTH/2 - 50, Game.HEIGHT - 110, TeamManager.DOWN, TeamManager.MIDDLE, false);
@@ -67,12 +84,19 @@ public class Game {
 		setEnemies(magenta, red);
 		setEnemies(magenta, orange);
 		*/
-		
+		/*
+		setEnemies(green, magenta);
+		setEnemies(green2, magenta);
+		setEnemies(green, magenta2);
+		setEnemies(green2, magenta2);
+		*/
 		teams.add(blue);
 		//teams.add(red);
 		teams.add(green);
+		//teams.add(green2);
 		//teams.add(yellow);
 		teams.add(magenta);
+		//teams.add(magenta2);
 		teams.add(orange);
 		//teams.add(cyan);
 		
@@ -94,6 +118,12 @@ public class Game {
 	}
 	
 	public void move() {
+		if(--framesToMove > 0) {
+			return;
+		} else {
+			framesToMove = getSlowMotionRate();
+		}
+		
 		int teamCounter = 0;
 		
 		if(changePlayerTeam){
@@ -175,6 +205,7 @@ public class Game {
 					}
 					for(Unit u : teams.get(index).getUnits()) {
 						u.setFlagOn(Unit.Flag.AI_CONTROLLED);
+						u.setFlagOn(Unit.Flag.ENEMY_AWARE);
 					}
 					setPlayerTeam(teams.get(newIndex));
 				}
@@ -184,6 +215,15 @@ public class Game {
 		changePlayerTeam = false;
 	}
 	
+	public void notifyGarageLost(TeamManager tm) {
+		synchronized (garageLostTeams) {
+			garageLostTeams.push(tm);
+		}
+	}
+	
+	public Stack<TeamManager> getGarageLostTeams() {
+		return garageLostTeams;
+	}
 	
 	public boolean processSelectionAt(Point p) {
 		if(getPlayerTeam() == null) return false;
@@ -260,7 +300,7 @@ public class Game {
 	}
 	
 	public void addPlayerTeamTank() {
-		Tank t = new IdleTank(this, getPlayerTeam(), getPlayerTeam().getBasePoint().x, getPlayerTeam().getBasePoint().y);
+		Tank t = new MissileTank(this, getPlayerTeam(), getPlayerTeam().getBasePoint().x, getPlayerTeam().getBasePoint().y);
 		t.setFlagOn(GameObject.Flag.SELECTABLE);
 		t.setFlagOff(Unit.Flag.AI_CONTROLLED);
 		t.setFlagOff(Unit.Flag.ENEMY_AWARE);
@@ -278,6 +318,50 @@ public class Game {
 			}
 		}
 		toggleFlag(FLAG_PLAYER_TARGETED);
+	}
+	
+	public void toggleSlowMotion() {
+		if(isFlagOn(FLAG_SLOW_MOTION)) {
+			slowMotionRateIndex = (slowMotionRateIndex + 1) % SLOW_MOTION_RATES.length;
+			if(slowMotionRateIndex == 0) setFlagOff(FLAG_SLOW_MOTION);
+		} else {
+			setFlagOn(FLAG_SLOW_MOTION);
+		}
+		resetFastForward();
+	}
+	
+	public int getSlowMotionRate() {
+		return isFlagOn(FLAG_SLOW_MOTION) ? SLOW_MOTION_RATES[slowMotionRateIndex] : 1;
+	}
+	
+	public void resetSlowMotion() {
+		setFlagOff(FLAG_SLOW_MOTION);
+		slowMotionRateIndex = 0;
+	}
+	
+	public void toggleFastForward() {
+		if(isFlagOn(FLAG_FAST_FORWARD)) {
+			fastForwardRateIndex = (fastForwardRateIndex + 1) % FAST_FORWARD_RATES.length;
+			if(fastForwardRateIndex == 0) setFlagOff(FLAG_FAST_FORWARD);
+		} else {
+			setFlagOn(FLAG_FAST_FORWARD);
+		}
+		if(isFlagOn(FLAG_FAST_FORWARD)) {
+			loopMilis = (int)Math.ceil(DEFAULT_LOOP_MILIS / FAST_FORWARD_RATES[fastForwardRateIndex]);
+		} else {
+			loopMilis = DEFAULT_LOOP_MILIS;
+		}
+		
+		resetSlowMotion();
+	}
+	
+	public int getFastForwardRate() {
+		return isFlagOn(FLAG_FAST_FORWARD) ? FAST_FORWARD_RATES[fastForwardRateIndex] : 1;
+	}
+	
+	public void resetFastForward() {
+		setFlagOff(FLAG_FAST_FORWARD);
+		fastForwardRateIndex = 0;
 	}
 	
 	public void toggleEnemyAwareFlag() {
@@ -331,4 +415,5 @@ public class Game {
 		public static final int GRAY = 7;
 		public static final int BLACK = 8;
 	}
+
 }

@@ -19,14 +19,14 @@ public class Main {
 		Window window = new Window(ui, controller);
 		controller.setComponents(ui, window);
 		window.setVisible(true);
-		//int paintFlag = 0;
+		int paintCounter = 0;
 		
 		while(true) {
 			game.move();
 			game.prepareDrawableObjects(ui.getViewableArea());
 			ui.update();
-			/*if((paintFlag ^= 1) == 1) */ui.repaint();
-			Thread.sleep(11);
+			if(!(game.isFlagOn(Game.FLAG_FAST_FORWARD)) || (paintCounter = ++paintCounter % game.getFastForwardRate()) == 0) ui.repaint();
+			Thread.sleep(game.loopMilis);
 		}
 	}
 

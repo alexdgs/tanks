@@ -9,9 +9,11 @@ import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.geom.AffineTransform;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.util.ConcurrentModificationException;
+import java.util.Stack;
 
 import game.Game;
 import game.TeamManager;
@@ -61,6 +63,13 @@ public class UI extends JPanel {
 	int selectionWidth;
 	int selectionHeight;
 	
+	int scaleWidth;
+	int scaleHeight;
+	static final double[] SCALES = {0.25, 0.5, 0.75, 1, 1.25, 1.5};
+	int scaleIndex = 3;
+	double minScale;
+	double currentScale = SCALES[scaleIndex];
+	
 	boolean movingIndicator;
 	float alphaMovingInd;
 	int timeShowMovingInd;
@@ -77,6 +86,7 @@ public class UI extends JPanel {
 		this.game = game;
 		this.numTeams = game.teams.size();
 		vista = new Vista(game);
+		minScale = Math.min(WIDTH/(double)Game.WIDTH, HEIGHT/(double)Game.HEIGHT);
 		//vista.setLocation(vistaX, vistaY);
 		//add(vista);
 		setLayout(null);
@@ -85,6 +95,7 @@ public class UI extends JPanel {
 		//addKeyListener(controller);
 		addMouseListener(controller);
 		addMouseMotionListener(controller);
+		addMouseWheelListener(controller);
 		
 		sm = new ShapeManager();
 		
@@ -105,9 +116,26 @@ public class UI extends JPanel {
 			movingIndicator = false;
 		}
 		
+		Stack<TeamManager> lost = game.getGarageLostTeams();
+		synchronized (lost) {
+			if(!lost.isEmpty()) {
+				int countLost = 0;
+				String lostTeams = lost.size() > 1 ? " teams had lost a Garage." : " team has lost a Garage.";
+				while(!lost.isEmpty()) {
+					lostTeams = lost.pop().getName() + lostTeams;
+					countLost++;
+					if(!lost.isEmpty()) {
+						if(countLost >= 2) lostTeams = ", " + lostTeams;
+						else if(countLost == 1) lostTeams = " and " + lostTeams;
+					}
+				}
+				tim.showMessage("Update", lostTeams);
+			}
+		}
+		
 		if(!isFlagOn(Flag.WINNER)) {
 			if(game.playerAIControlled && tim != null) {
-				tim.showMessage("Winner team is " + game.getWinnerName());
+				tim.showMessage("Winner!", "Winner team is " + game.getWinnerName());
 				setFlagOn(Flag.WINNER);
 			}
 		}
@@ -119,6 +147,7 @@ public class UI extends JPanel {
 		setSize(w, h);
 		infoX = w - 290;
 		vista.updateSize(w, h);
+		//vista.updateScale(SCALES[scaleIndex]);
 	}
 	
 	public void moveVista(int dir) {
@@ -187,8 +216,34 @@ public class UI extends JPanel {
 		game.toggleEnemyAwareFlag();
 	}
 	
+	public void toggleSlowMotion() {
+		game.toggleSlowMotion();
+	}
+	
+	public void toggleFastForward() {
+		game.toggleFastForward();
+	}
+	
 	public Rectangle getViewableArea() {
-		return vista.getViewableArea();
+		return vista.getViewableArea(SCALES[scaleIndex]);
+	}
+	
+	public void zoomIn() {
+		scaleIndex = Math.min(scaleIndex + 1, SCALES.length - 1);
+		updateCurrentScale();
+		//vista.updateScale(SCALES[scaleIndex]);
+	}
+	
+	public void zoomOut() {
+		if(SCALES[scaleIndex] > minScale) {
+			scaleIndex = Math.max(scaleIndex - 1, 0);
+			updateCurrentScale();
+		}
+		//vista.updateScale(SCALES[scaleIndex]);
+	}
+	
+	public void updateCurrentScale() {
+		currentScale = Math.max(SCALES[scaleIndex], minScale);
 	}
 	
 	public void endGame() {
@@ -225,7 +280,7 @@ public class UI extends JPanel {
 		Graphics2D g2d = (Graphics2D)g;
 		g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 		g2d.setColor(bgColor);
-		g2d.fillRect(0, 0, vista.w, vista.h);
+		g2d.fillRect(0, 0, (int)Math.min(Game.WIDTH*currentScale, WIDTH), (int)Math.min(Game.HEIGHT*currentScale, HEIGHT));
 		
 		if(selectingArea) {
 			g2d.setColor(Color.GREEN);
@@ -237,11 +292,13 @@ public class UI extends JPanel {
 			g2d.drawImage(IMG_MOVING_IND, movingIndicatorX, movingIndicatorY, null);
 			g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
 		}
-		
+		AffineTransform noScaleTransform = g2d.getTransform();
+		g2d.scale(currentScale, currentScale);
 		vista.paint(g2d);
+		g2d.setTransform(noScaleTransform);
 		
 		if(showInfo) drawInfo(g2d, infoX, INFO_Y, INFO_W, INFO_H_INIT + numTeams*INFO_H_TEAM);
-		drawCurrTeam(g2d, 5, HEIGHT-15, 150, 30);
+		drawCurrTeam(g2d, 5, HEIGHT-15, 200, 30);
 		//drawSpike(g2d);
 	}
 	
@@ -276,7 +333,10 @@ public class UI extends JPanel {
 		g2d.fillRect(x, y, w, h);
 		g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
 		g2d.setColor(game.getPlayerTeam().color);
-		g2d.drawString("Curr.Team: " + game.getPlayerTeam().string, x+10, y+10);
+		
+		g2d.drawString("Curr.Team: " + game.getPlayerTeam().string + "    " +
+				(game.isFlagOn(Game.FLAG_SLOW_MOTION) ? "Slow Motion: " + game.getSlowMotionRate() + "x" :
+					game.isFlagOn(Game.FLAG_FAST_FORWARD) ? "Fast Fwd.: " + game.getFastForwardRate()  + "x" : "Normal Speed"), x+10, y+10);
 	}
 	
 	public void drawSpike(Graphics2D g2d) {

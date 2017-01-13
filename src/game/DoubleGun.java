@@ -13,7 +13,7 @@ public class DoubleGun extends DefenseBuilding {
 	static final int WIDTH = 30;
 	static final int HEIGHT = 30;
 	static final int TIME_TO_FIRE = 150;
-	static final int HIT_POINTS = 150;
+	static final int HIT_POINTS = 175;
 	static final int VISIBLE_DIST = 200;
 	
 	static final double MIN_ANGLE_DIFF_TO_FIRE = Math.PI/360.0;
@@ -35,13 +35,7 @@ public class DoubleGun extends DefenseBuilding {
 	}
 	
 	@Override
-	public void step() {
-		if(hitPoints < 1) {
-			setFlagOff(Flag.ALIVE);
-			destroy();
-			return;
-		}
-		
+	public void move() {
 		target = getTarget();
 		if(target != null) {
 			double angleToTarget = angleTo(target);
@@ -62,8 +56,6 @@ public class DoubleGun extends DefenseBuilding {
 			fireMovePosition = Math.max(fireMovePosition + currentFireMove, 0.0);
 			currentFireMove -= FIRE_MOVE_DELTA;
 		}
-		
-		stepEffects();
 	}
 	
 	@Override
@@ -93,5 +85,6 @@ public class DoubleGun extends DefenseBuilding {
 		g2d.setTransform(backup);
 		
 		drawAddElements(g2d, x, y);
+		drawHUDElements(g2d, x, y);
 	}
 }

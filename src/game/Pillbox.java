@@ -11,9 +11,9 @@ public class Pillbox extends DefenseBuilding {
 	static final int WIDTH = 30;
 	static final int HEIGHT = 30;
 	static final int TIME_TO_FIRE = 20;
-	static final int HIT_POINTS = 150;
+	static final int HIT_POINTS = 200;
 	static final int DIF_FIRE_CANNONS = 8;
-	static final int VISIBLE_DIST = 160;
+	static final int VISIBLE_DIST = 170;
 	static final Image IMG_DETAIL_PILLBOX = (new ImageIcon("src/img/pbox_detail.png")).getImage();
 	
 	public Pillbox(Game game, TeamManager team, double x, double y) {

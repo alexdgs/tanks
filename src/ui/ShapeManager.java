@@ -32,6 +32,8 @@ public class ShapeManager {
 	public static final int BOMB_TANK = 15;
 	public static final int MINE_TANK = 16;
 	public static final int SECRET_TANK = 17;
+	public static final int ENERGY_TANK = 18;
+	public static final int FREEZEBOMB_TANK = 19;
 	
 	public static final int GUARD_TOWER = 20;
 	public static final int PILLBOX = 21;
@@ -66,8 +68,8 @@ public class ShapeManager {
 		"src/img/bomb_tank.png",
 		"src/img/mine_tank.png",
 		"src/img/secret_tank.png",
-		null,
-		null,
+		"src/img/energy_tank.png",
+		"src/img/freezebomb_tank.png",
 		"src/img/guardtower.png",
 		"src/img/pbox.png",
 		"src/img/double_gun.png",

@@ -24,13 +24,7 @@ public abstract class DefenseBuilding extends Building implements Drawable {
 	}
 	
 	@Override
-	public void step() {
-		if(hitPoints < 1) {
-			setFlagOff(Flag.ALIVE);
-			destroy();
-			return;
-		}
-		
+	public void move() {
 		target = getTarget();
 		if(target != null) {
 			setFlagOn(Flag.FIRING);
@@ -40,8 +34,6 @@ public abstract class DefenseBuilding extends Building implements Drawable {
 			fire();
 			timeToFire = maxTimeToFire;
 		} else if(timeToFire > 0) timeToFire--;
-		
-		stepEffects();
 	}
 	
 	public void fire() {
@@ -60,5 +52,6 @@ public abstract class DefenseBuilding extends Building implements Drawable {
 		g2d.setTransform(backup);
 		
 		drawAddElements(g2d, x, y);
+		drawHUDElements(g2d, x, y);
 	}
 }

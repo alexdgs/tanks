@@ -4,7 +4,7 @@ import ui.ShapeManager;
 
 public class ScatterTank extends Tank implements Drawable {
 	
-	static final double SPEED = 1.25;
+	static final double SPEED = 1.15;
 	static final int HIT_POINTS = 90;
 	static final double VISIBLE_DIST = 170.0;
 	static final double FIREABLE_DIST = 150.0;

@@ -45,6 +45,7 @@ public class TeamManager {
 	private ArrayList<Unit> units;
 	ArrayList<Unit> newUnits;
 	ArrayList<TeamManager> enemies;
+	ArrayList<UnitGroup> groups;
 	Game game;
 	
 	public TeamManager(Game game, int teamId, Color color, String string, int x, int y, int UD, int LR, boolean ai) {
@@ -59,6 +60,8 @@ public class TeamManager {
 		units = new ArrayList<Unit>();
 		newUnits = new ArrayList<Unit>();
 		enemies = new ArrayList<TeamManager>();
+		groups = new ArrayList<UnitGroup>();
+		
 		if(ai) {
 			setFlagOn(Flag.AI_TEAM);
 			initAI();
@@ -84,6 +87,7 @@ public class TeamManager {
 	
 	public void initAI() {
 		units.add(new Garage(game, this, xBase, yBase));
+		//units.add(new Garage(game, this, xBase, yBase));
 		
 		int g2x = 0;
 		int g2y = 0;
@@ -145,11 +149,18 @@ public class TeamManager {
 		for(TeamManager tm : enemies) {
 			if(tm.isFlagOn(Flag.ACTIVE)) aliveEnemies.add(tm);
 		}
-		
 		enemies = aliveEnemies;
 		
+		ArrayList<UnitGroup> validGroups = new ArrayList<UnitGroup>();
+		for(UnitGroup ug : groups) {
+			ug.step();
+			if(ug.valid) {
+				validGroups.add(ug);
+			}
+		}
+		groups = validGroups;
+		
 		ArrayList<Unit> remainingUnits = new ArrayList<Unit>();
-		boolean hasRemainingGarages = false;
 		int numTanks = 0;
 		for(Unit u : units) {
 			u.step();
@@ -158,12 +169,11 @@ public class TeamManager {
 				if(u instanceof Tank && u.isFlagOn(GameObject.Flag.AI_CONTROLLED)) {
 					numTanks++;
 				}
-				if(u instanceof Garage) hasRemainingGarages = true;
 			}
 		}
-		
 		units = remainingUnits;
-		if(!hasRemainingGarages) setFlagOff(Flag.HAS_REAMINING_GARAGES);
+		
+		if(!hasRemainingGarages()) setFlagOff(Flag.HAS_REAMINING_GARAGES);
 		if(strategy == STRATEGY_BASE && numTanks >= MIN_TANKS_GO_OUT){
 			strategy = STRATEGY_OUT;
 		} else if(strategy == STRATEGY_OUT && numTanks <= MAX_TANKS_GO_BASE){
@@ -171,8 +181,49 @@ public class TeamManager {
 		}
 	}
 	
+	public boolean hasRemainingGarages() {
+		return remainingGarages > 0;
+	}
+
+	public void handleNewUnit(Unit u) {
+		UnitGroup ug = getAvailableGroup();
+		ug.addUnit(u);
+		u.setGroup(ug);
+	}
+	
+	public UnitGroup getAvailableGroup() {
+		UnitGroup aug = null;
+		for(UnitGroup ug : groups) {
+			if(!ug.deployed) {
+				aug = ug;
+				break;
+			}
+		}
+		if(aug == null) {
+			aug = new UnitGroup(this);
+			groups.add(aug);
+		}
+		return aug;
+	}
+	
 	public Point getBasePoint() {
 		return new Point(xBase, yBase);
+	}
+	
+	public TeamManager getStrongestEnemyTeam() {
+		ArrayList<TeamManager> enemyList = new ArrayList<TeamManager>();
+		for(TeamManager e : enemies) {
+			if(enemyList.size() < 1 || (enemyList.get(0).remainingGarages <= e.remainingGarages)){
+				if(enemyList.size() > 0 && enemyList.get(0).remainingGarages < e.remainingGarages) {
+					enemyList.clear();
+				}
+				enemyList.add(e);
+			}
+		}
+		
+		int numEnemies = enemyList.size();
+		int enemyIdx = GameObject.getRandomInteger(numEnemies);
+		return numEnemies > 0 ? enemyList.get(enemyIdx) : null;
 	}
 	
 	public String getName() {
@@ -202,6 +253,11 @@ public class TeamManager {
 	
 	public int getNumUnits() {
 		return units.size();
+	}
+	
+	public Point getTargetPoint(Unit u) {
+		if(u.group != null) return u.group.getTargetPoint();
+		else return null;
 	}
 
 	public void score(int i) {

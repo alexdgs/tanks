@@ -1,5 +1,6 @@
 package game;
 
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
@@ -15,6 +16,9 @@ public abstract class Unit extends GameObject implements Steppable {
 	double visibleDist;
 	Bar healthBar;
 	Unit target;
+	UnitGroup group;
+	
+	int timeRemainingFrozen = 0;
 	
 	ArrayList<Circle> effects;
 	Point targetPoint;
@@ -28,6 +32,22 @@ public abstract class Unit extends GameObject implements Steppable {
 		healthBar = new Bar(this, 0, -5, w, 5, hitPoints, hitPoints, null, true, Bar.TYPE_HEALTH);
 		effects = new ArrayList<Circle>();
 		setFlagOn(Flag.MOVEABLE);
+	}
+	
+	@Override
+	public void step() {
+		if(hitPoints < 1) {
+			setFlagOff(Flag.ALIVE);
+			destroy();
+			return;
+		}
+		
+		if(timeRemainingFrozen == 0) {
+			move();
+		} else timeRemainingFrozen--;
+		
+		addSteps();
+		stepEffects();
 	}
 	
 	public Unit getTarget() {
@@ -59,6 +79,14 @@ public abstract class Unit extends GameObject implements Steppable {
 		
 	}
 	
+	public void addSteps() {
+		
+	}
+	
+	public void move() {
+		
+	}
+	
 	public void heal(int points) {
 		if(hitPoints > 0) {
 			healthBar.update(hitPoints = Math.min(hitPoints + points, maxHitPoints));
@@ -86,6 +114,10 @@ public abstract class Unit extends GameObject implements Steppable {
 		return false;
 	}
 	
+	public void freeze(int time) {
+		timeRemainingFrozen = time;
+	}
+	
 	public void underAttack(double x, double y) {
 		
 	}
@@ -105,6 +137,10 @@ public abstract class Unit extends GameObject implements Steppable {
 		this.targetPoint = p;
 		toX = p.x;
 		toY = p.y;
+	}
+	
+	public void setGroup(UnitGroup ug) {
+		group = ug;
 	}
 	
 	public void selectedAsTarget() {
@@ -139,6 +175,15 @@ public abstract class Unit extends GameObject implements Steppable {
 	}
 	
 	public void drawAddElements(Graphics2D g2d, int x, int y) {
+		if(timeRemainingFrozen > 0) {
+			g2d.setColor(FreezerWave.ICE_COLOR);
+			g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, FreezerWave.ICE_ALPHA));
+			g2d.fillRoundRect(x-FreezerWave.ICE_THICKNESS, y-FreezerWave.ICE_THICKNESS, h+FreezerWave.ICE_THICKNESS*2, w+FreezerWave.ICE_THICKNESS*2, FreezerWave.ICE_ARC_WIDTH, FreezerWave.ICE_ARC_WIDTH);
+			g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 1.0f));
+		}
+	}
+	
+	public void drawHUDElements(Graphics2D g2d, int x, int y) {
 		drawHealthBar(g2d, x, y);
 		if(isFlagOn(Flag.SELECTED)) drawSelected(g2d, x, y);
 		//drawTeamId(g2d, x, y);

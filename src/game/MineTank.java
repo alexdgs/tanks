@@ -6,7 +6,7 @@ import java.awt.Graphics2D;
 import ui.ShapeManager;
 
 public class MineTank extends Tank {
-	static final double SPEED = 1.05;
+	static final double SPEED = 1.2;
 	static final int HIT_POINTS = 80;
 	static final double VISIBLE_DIST = 160.0;
 	static final double FIREABLE_DIST = 5.0;
@@ -22,13 +22,7 @@ public class MineTank extends Tank {
 	}
 	
 	@Override
-	public void step() {
-		if(hitPoints < 1) {
-			setFlagOff(Flag.ALIVE);
-			destroy();
-			return;
-		}
-		
+	public void move() {
 		if(isFlagOn(Flag.MOVING)) {
 			if(distCenterTo(toX, toY) < 5) {
 				setFlagOff(Flag.OVERRIDE_ACTION);
@@ -46,8 +40,6 @@ public class MineTank extends Tank {
 		} else {
 			moveToPoint(getRandomMapPoint(), false);
 		}
-		
-		stepEffects();
 	}
 	
 	public void putMine() {

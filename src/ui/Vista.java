@@ -63,8 +63,8 @@ public class Vista {
 		return new Point(x, y);
 	}
 	
-	public Rectangle getViewableArea() {
-		return new Rectangle(x, y, w, h);
+	public Rectangle getViewableArea(double scale) {
+		return new Rectangle(x, y, Math.min(Game.WIDTH, (int)(w/scale)), Math.min(Game.HEIGHT, (int)(h/scale)));
 	}
 	
 	public void paint(Graphics2D g2d) {

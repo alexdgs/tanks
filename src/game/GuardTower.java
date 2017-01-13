@@ -11,7 +11,7 @@ public class GuardTower extends DefenseBuilding {
 	static final int WIDTH = 30;
 	static final int HEIGHT = 30;
 	static final int TIME_TO_FIRE = 20;
-	static final int HIT_POINTS = 80;
+	static final int HIT_POINTS = 100;
 	static final int VISIBLE_DIST = 200;
 	static final Image IMG_DETAIL_TOWER = (new ImageIcon("src/img/guardtower_detail.png")).getImage();
 	

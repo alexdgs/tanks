@@ -60,7 +60,6 @@ public abstract class HomingProjectile extends DirectedProjectile {
 	public void adjustAngle() {
 		angle = newAngle(angle, newAngle, homingRate);
 		setSpeeds();
-		
 	}
 	
 	public void setSpeeds() {

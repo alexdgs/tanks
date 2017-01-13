@@ -15,7 +15,7 @@ public class CurvyBullet extends HomingProjectile implements Drawable {
 	static final double MIN_DEV_ANGLE = MAX_DEV_ANGLE*-1;
 	static final double DELTA_ANGLE = Math.PI/30.0;
 	
-	static final double MAGNET_DISTANCE = 40.0;
+	static final double MAGNET_DISTANCE = 50.0;
 	
 	double devAngle;
 	boolean incAngle;

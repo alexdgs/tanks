@@ -51,13 +51,7 @@ public abstract class Tank extends MoveableUnit implements Drawable, Selectable 
 	}
 	
 	@Override
-	public void step() {
-		if(hitPoints < 1) {
-			setFlagOff(Flag.ALIVE);
-			destroy();
-			return;
-		}
-		
+	public void move() {
 		if(isFlagOn(Flag.MANDATORY_TARGET) && !target.isFlagOn(Flag.ALIVE)) {
 			target = null;
 			setFlagOff(Flag.MANDATORY_TARGET);
@@ -114,7 +108,14 @@ public abstract class Tank extends MoveableUnit implements Drawable, Selectable 
 								moveToPoint(team.getBasePoint(), false);
 							}
 						} else {
-							moveToPoint(getRandomMapPoint(), false);
+							if(group != null) {
+								if(group.deployed) {
+									Point p = group.getTargetPoint();
+									moveToPoint(p != null ? p : getRandomMapPoint(), false);
+								}
+							} else {
+								moveToPoint(getRandomMapPoint(), false);
+							}
 						} 
 					}
 				}
@@ -125,16 +126,9 @@ public abstract class Tank extends MoveableUnit implements Drawable, Selectable 
 			fire();
 			timeToFire = maxTimeToFire;
 		} else if(timeToFire > 0) timeToFire--;
-		
-		addSteps();
-		stepEffects();
 	}
 	
 	public void fire() {
-		
-	}
-	
-	public void addSteps() {
 		
 	}
 	
@@ -196,6 +190,7 @@ public abstract class Tank extends MoveableUnit implements Drawable, Selectable 
 		g2d.setTransform(backup);
 		
 		drawAddElements(g2d, x, y);
+		drawHUDElements(g2d, x, y);
 	}
 	
 	public void drawDetail(Graphics2D g2d, int x, int y) {

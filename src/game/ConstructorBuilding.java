@@ -19,7 +19,7 @@ public abstract class ConstructorBuilding extends Building {
 	}
 	
 	@Override
-	public void drawAddElements(Graphics2D g2d, int x, int y) {
+	public void drawHUDElements(Graphics2D g2d, int x, int y) {
 		drawHealthBar(g2d, x, y);
 		drawProgressBar(g2d, x, y);
 		//drawHealth(g2d, x, y);

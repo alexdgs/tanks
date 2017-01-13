@@ -60,7 +60,7 @@ public class Healer extends Building implements Drawable {
 		g2d.drawImage(DETAIL, 10, 10, null);
 		g2d.setTransform(backup);
 		
-		drawAddElements(g2d, x, y);
+		drawHUDElements(g2d, x, y);
 	}
 
 }

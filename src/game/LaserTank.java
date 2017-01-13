@@ -3,7 +3,7 @@ package game;
 import ui.ShapeManager;
 
 public class LaserTank extends Tank implements Drawable {
-	static final double SPEED = 1.2;
+	static final double SPEED = 1.1;
 	static final int HIT_POINTS = 100;
 	static final double VISIBLE_DIST = 170.0;
 	static final double FIREABLE_DIST = 130.0;

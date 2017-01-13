@@ -49,8 +49,10 @@ public class TurretTank extends Tank {
 	
 	@Override
 	public void addSteps() {
-		turret.setTarget(isFlagOn(Flag.AI_CONTROLLED) ? turretTarget : target);
-		turret.step();
+		if(timeRemainingFrozen == 0) {
+			turret.setTarget(isFlagOn(Flag.AI_CONTROLLED) ? turretTarget : target);
+			turret.step();
+		}
 	};
 	
 	@Override

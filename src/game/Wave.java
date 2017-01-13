@@ -38,9 +38,8 @@ public class Wave extends Projectile implements Drawable {
 		bounds = new Ellipse2D.Double(x, y, radius*2, radius*2);
 		for(TeamManager team : team.enemies) {
 			for(Unit u : team.getUnits()) {
-				if(hit(u) && !hitted.contains(u)) {
-					hit(u, getDamage(u));
-					hitted.add(u);
+				if(hits(u) && !hitted.contains(u)) {
+					doHit(u);
 				}
 			}
 		}
@@ -54,8 +53,13 @@ public class Wave extends Projectile implements Drawable {
 		return DAMAGE;
 	}
 	
-	public boolean hit(Unit u) {
+	public boolean hits(Unit u) {
 		return bounds.intersects(u.getBounds());
+	}
+	
+	public void doHit(Unit u) {
+		hit(u, getDamage(u));
+		hitted.add(u);
 	}
 	
 	@Override
@@ -71,5 +75,4 @@ public class Wave extends Projectile implements Drawable {
 		g2d.drawOval(x, y, radius*2, radius*2);
 		g2d.setStroke(backup);
 	}
-
 }

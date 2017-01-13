@@ -14,7 +14,11 @@ public class BombTank extends Tank {
 	public static final int CONSTRUCTION_TIME = 1100;
 	
 	public BombTank(Game game, TeamManager team, double x, double y) {
-		super(game, team, x, y, HIT_POINTS, SPEED, VISIBLE_DIST, FIREABLE_DIST, MAX_TIME_TO_FIRE, MAX_TURN_ANGLE, BULLET_OFFSET_X, BULLET_OFFSET_Y, ShapeManager.BOMB_TANK);
+		this(game, team, x, y, ShapeManager.BOMB_TANK);
+	}
+	
+	public BombTank(Game game, TeamManager team, double x, double y, int shapeIndex) {
+		super(game, team, x, y, HIT_POINTS, SPEED, VISIBLE_DIST, FIREABLE_DIST, MAX_TIME_TO_FIRE, MAX_TURN_ANGLE, BULLET_OFFSET_X, BULLET_OFFSET_Y, shapeIndex);
 		setFlagOn(Flag.CAN_FIRE);
 	}
 	

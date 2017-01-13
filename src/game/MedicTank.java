@@ -34,13 +34,7 @@ public class MedicTank extends Tank {
 	}
 	
 	@Override
-	public void step() {
-		if(hitPoints < 1) {
-			setFlagOff(Flag.ALIVE);
-			destroy();
-			return;
-		}
-		
+	public void move() {
 		if(target == null || !target.isFlagOn(Flag.ALIVE)|| target.hitPoints == target.maxHitPoints || distToCenter(target) > healableDist) {
 			target = getTarget();
 		}
@@ -77,8 +71,6 @@ public class MedicTank extends Tank {
 			heal();
 			timeToHeal = maxTimeToHeal;
 		} else if(timeToHeal > 0) timeToHeal--;
-		
-		stepEffects();
 	}
 	
 	@Override

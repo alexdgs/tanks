@@ -185,7 +185,7 @@ public class GameObject {
 		return new Point(x, y);
 	}
 	
-	public int getRandomInteger(int lim) {
+	public static int getRandomInteger(int lim) {
 		return (int)(Math.random()*lim);
 	}
 	
@@ -220,7 +220,23 @@ public class GameObject {
 		
 		return newAngle;
 	}
-	
+	/*
+	public int getDirectionToAngle(double lastAngle, double targetAngle) {
+		int direction = Direction.CLOCKWISE;
+		double difAngle = lastAngle - targetAngle;
+		
+		if(difAngle >= 0.0) {
+			if(difAngle < Math.PI)
+				direction = Direction.COUNTER_CLOCKWISE;
+		} else {
+			difAngle = Math.abs(difAngle);
+			if(difAngle >= Math.PI)
+				direction = Direction.COUNTER_CLOCKWISE;
+		}
+		
+		return direction;
+	}
+	*/
 	static class Flag
 	{
 		public static final int ALIVE = 0;
@@ -237,5 +253,11 @@ public class GameObject {
 		public static final int OVERRIDE_ACTION = 17;
 		public static final int MANDATORY_TARGET = 18;
 		public static final int HEALED = 26;
+	}
+	
+	static class Direction
+	{
+		public static final int CLOCKWISE = 0;
+		public static final int COUNTER_CLOCKWISE = 1;
 	}
 }

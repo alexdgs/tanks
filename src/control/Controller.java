@@ -6,6 +6,8 @@ import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 
@@ -13,7 +15,7 @@ import ui.UI;
 import ui.Vista;
 import ui.Window;
 
-public class Controller implements KeyListener, MouseListener, MouseMotionListener, WindowListener {
+public class Controller implements KeyListener, MouseListener, MouseMotionListener, MouseWheelListener, WindowListener {
 	
 	static final int MIN_PIXELS_TO_DRAG = 5;
 	
@@ -48,7 +50,12 @@ public class Controller implements KeyListener, MouseListener, MouseMotionListen
 		else if(e.getKeyCode() == KeyEvent.VK_E) ui.togglePlayerAsTarget();
 		else if(e.getKeyCode() == KeyEvent.VK_C) ui.scheduleChangePlayerTeam();
 		else if(e.getKeyCode() == KeyEvent.VK_W) ui.toggleEnemyAwareFlag();
+		else if(e.getKeyCode() == KeyEvent.VK_PLUS || e.getKeyCode() == KeyEvent.VK_ADD) ui.zoomIn();
+		else if(e.getKeyCode() == KeyEvent.VK_MINUS) ui.zoomOut();
+		else if(e.getKeyCode() == KeyEvent.VK_W) ui.toggleEnemyAwareFlag();
 		else if(e.getKeyCode() == KeyEvent.VK_ESCAPE) ui.endGame();
+		else if(e.getKeyCode() == KeyEvent.VK_S) ui.toggleSlowMotion();
+		else if(e.getKeyCode() == KeyEvent.VK_Z) ui.toggleFastForward();
 	}
 
 	@Override
@@ -134,6 +141,16 @@ public class Controller implements KeyListener, MouseListener, MouseMotionListen
 	public void mouseMoved(MouseEvent e) {
 		
 	}
+	
+	@Override
+	public void mouseWheelMoved(MouseWheelEvent e) {
+		int notches = e.getWheelRotation();
+		if(notches < 0) {
+			ui.zoomIn();
+		} else {
+			ui.zoomOut();
+		}
+	}
 
 	@Override
 	public void windowActivated(WindowEvent e) {
@@ -174,5 +191,4 @@ public class Controller implements KeyListener, MouseListener, MouseMotionListen
 		// TODO Auto-generated method stub
 		
 	}
-
 }

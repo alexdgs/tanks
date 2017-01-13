@@ -11,7 +11,7 @@ public class Missile extends Bullet implements Drawable {
 	static final int HITTABLE_DIAMETER = 15;
 	static final int HALF_DIAMETER = HITTABLE_DIAMETER/2;
 	static final double SPEED = 1.5;
-	static final int DAMAGE = 8;
+	static final int DAMAGE = 15;
 	
 	static final int NUM_FRAMES = 4; 
 	static final int TICKS_PER_FRAME = 10;

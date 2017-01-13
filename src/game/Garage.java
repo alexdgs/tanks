@@ -35,7 +35,9 @@ public class Garage extends ConstructorBuilding implements Drawable {
 		LaserTank.class,
 		BombTank.class,
 		MineTank.class,
-		SecretTank.class
+		SecretTank.class,
+		EnergyTank.class,
+		FreezeBombTank.class
 	};
 	
 	static Constructor<Tank>[] constructors;
@@ -43,6 +45,7 @@ public class Garage extends ConstructorBuilding implements Drawable {
 	
 	int unitInProcess;
 	int medicCounter = 0;
+	int mineCounter = 0;
 	
 	//Turret turret;
 	
@@ -101,12 +104,18 @@ public class Garage extends ConstructorBuilding implements Drawable {
 		int type = op;
 		if(op == Type.RANDOM) {
 			do {
-				if((type = getRandomInteger(classes.length)) == Type.MEDIC) medicCounter++;
-			} while(medicCounter < 3 && type == Type.MEDIC);
+				type = getRandomInteger(classes.length);
+				if(type == Type.MEDIC) medicCounter++;
+				else if(type == Type.MINE) mineCounter++;
+			} while((medicCounter < 3 && type == Type.MEDIC) || (mineCounter < 3 && type == Type.MINE));
 			
 			if(medicCounter == 3) {
 				type = Type.MEDIC;
 				medicCounter = 0;
+			}
+			if(mineCounter == 3) {
+				type = Type.MINE;
+				mineCounter = 0;
 			}
 		}
 		
@@ -124,6 +133,7 @@ public class Garage extends ConstructorBuilding implements Drawable {
 	public void destroy() {
 		super.destroy();
 		team.remainingGarages--;
+		game.notifyGarageLost(team);
 	}
 	
 	@Override
@@ -132,6 +142,7 @@ public class Garage extends ConstructorBuilding implements Drawable {
 		try {
 			t = (Tank) constructors[unitInProcess].newInstance(game, team, x + (halfWidth - Tank.HALF_WIDTH), y + (halfHeight - Tank.HALF_HEIGHT));
 			team.newUnits.add(t);
+			team.handleNewUnit(t);
 		} catch (InstantiationException e) {
 			e.printStackTrace();
 		} catch (IllegalAccessException e) {
@@ -152,7 +163,7 @@ public class Garage extends ConstructorBuilding implements Drawable {
 		g2d.drawImage(IMG_GARAGE, x, y, null);
 		//turret.draw(g2d, x, y);
 		
-		drawAddElements(g2d, x, y);
+		drawHUDElements(g2d, x, y);
 	}
 	
 	static class Type
@@ -176,5 +187,7 @@ public class Garage extends ConstructorBuilding implements Drawable {
 		static final int BOMB = 15;
 		static final int MINE = 16;
 		static final int SECRET = 17;
+		static final int ENERGY = 18;
+		static final int FREEZEBOMB = 19;
 	}
 }
